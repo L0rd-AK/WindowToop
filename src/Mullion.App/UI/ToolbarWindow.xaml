@@ -1,0 +1,33 @@
+<Window x:Class="Mullion.App.UI.ToolbarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mullion toolbar"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="False"
+        Focusable="False" SizeToContent="WidthAndHeight"
+        WindowStartupLocation="Manual" Left="-32000" Top="-32000"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display">
+    <Border Background="{StaticResource Mullion.Surface}"
+            BorderBrush="{StaticResource Mullion.SurfaceBorder}"
+            BorderThickness="1" CornerRadius="7" Padding="5,3">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <ToggleButton x:Name="PinButton" Style="{StaticResource Mullion.ToolButton}" Content="Pin"
+                          ToolTip="Always on top" Click="OnPin" />
+            <Slider x:Name="OpacitySlider" Width="96" Minimum="10" Maximum="100" Value="100"
+                    TickFrequency="5" IsSnapToTickEnabled="True" IsMoveToPointEnabled="True"
+                    Margin="6,0,2,0" VerticalAlignment="Center" Focusable="False"
+                    ToolTip="Opacity" ValueChanged="OnOpacityChanged" />
+            <TextBlock x:Name="OpacityLabel" Text="100%" Width="36" Margin="0,0,4,0"
+                       Foreground="{StaticResource Mullion.TextMuted}" FontSize="11"
+                       VerticalAlignment="Center" TextAlignment="Right" />
+            <ToggleButton x:Name="GhostButton" Style="{StaticResource Mullion.ToolButton}" Content="Ghost"
+                          ToolTip="Click-through: the window ignores the mouse. Turn it off here, with the hotkey, or from the tray menu."
+                          Click="OnGhost" />
+            <Button x:Name="PipButton" Style="{StaticResource Mullion.ToolButton}" Content="PiP"
+                    ToolTip="Picture-in-picture: a small live view that stays on top" Click="OnPip" />
+            <Button x:Name="ResetButton" Style="{StaticResource Mullion.ToolButton}" Content="Reset"
+                    ToolTip="Restore this window to its original state" Click="OnReset" />
+        </StackPanel>
+    </Border>
+</Window>

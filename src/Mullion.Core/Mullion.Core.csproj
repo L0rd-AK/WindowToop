@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Mullion.Core</RootNamespace>
+    <Description>Platform-independent window-management logic for Mullion (filtering, state tracking, hotkey parsing, settings).</Description>
+  </PropertyGroup>
+
+</Project>

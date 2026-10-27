@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Mullion</AssemblyName>
+    <RootNamespace>Mullion.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- DPI awareness is declared in app.manifest (PerMonitorV2), which is the WPF-supported route.
+         WFAC010 is the WinForms generator asking to own DPI instead; WinForms here is only the tray icon. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Description>Mullion: pin, fade, ghost and shrink any window.</Description>
+    <AssemblyTitle>Mullion</AssemblyTitle>
+    <Copyright>Mullion contributors</Copyright>
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms is only used for NotifyIcon; drop its implicit using so Application/MessageBox resolve to WPF. -->
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mullion.Core\Mullion.Core.csproj" />
+  </ItemGroup>
+
+</Project>

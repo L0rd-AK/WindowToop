@@ -1,0 +1,53 @@
+<Application x:Class="Mullion.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <!-- Shared palette so the toolbar, PiP frame and dialogs look like one app. -->
+        <SolidColorBrush x:Key="Mullion.Surface" Color="#F2262A33" />
+        <SolidColorBrush x:Key="Mullion.SurfaceBorder" Color="#FF3B404D" />
+        <SolidColorBrush x:Key="Mullion.Text" Color="#FFE8EAF0" />
+        <SolidColorBrush x:Key="Mullion.TextMuted" Color="#FF9AA0AE" />
+        <SolidColorBrush x:Key="Mullion.Accent" Color="#FF5B9CFF" />
+        <SolidColorBrush x:Key="Mullion.AccentPressed" Color="#FF3F7FE0" />
+        <SolidColorBrush x:Key="Mullion.Hover" Color="#FF363B48" />
+
+        <Style x:Key="Mullion.ToolButton" TargetType="ButtonBase">
+            <Setter Property="Foreground" Value="{StaticResource Mullion.Text}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{StaticResource Mullion.Hover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{StaticResource Mullion.AccentPressed}" />
+                            </Trigger>
+                            <Trigger Property="ToggleButton.IsChecked" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{StaticResource Mullion.Accent}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>
