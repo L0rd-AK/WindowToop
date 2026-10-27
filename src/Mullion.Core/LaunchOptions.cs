@@ -17,6 +17,14 @@ public sealed class LaunchOptions
     /// <summary>--settings &lt;file&gt;: use this settings file instead of %APPDATA%\Mullion\settings.json (portable use, tests).</summary>
     public string? SettingsPath { get; private set; }
 
+    /// <summary>--pipcheck [report-file]: end-to-end check that PiP stays live while a real browser window is covered.</summary>
+    public bool PipCheck => PipCheckReportPath is not null;
+
+    public string? PipCheckReportPath { get; private set; }
+
+    /// <summary>--browser &lt;exe&gt;: Chromium-based browser for --pipcheck (default: Edge, then Chrome).</summary>
+    public string? BrowserPath { get; private set; }
+
     public static LaunchOptions Parse(string[] args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -46,6 +54,14 @@ public sealed class LaunchOptions
 
                 case "--settings":
                     options.SettingsPath = TakeValue(args, ref i);
+                    break;
+
+                case "--pipcheck":
+                    options.PipCheckReportPath = TakeValue(args, ref i) ?? Path.Combine(Path.GetTempPath(), "mullion-pipcheck.txt");
+                    break;
+
+                case "--browser":
+                    options.BrowserPath = TakeValue(args, ref i);
                     break;
             }
         }

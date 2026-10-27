@@ -75,6 +75,12 @@ public sealed class AppSettings
     /// <summary>Percent change per opacity hotkey press.</summary>
     public int OpacityStep { get; set; } = 10;
 
+    /// <summary>
+    /// While a picture-in-picture view is open, hide the source window (topmost, click-through, nearly
+    /// transparent) so browsers don't pause rendering when other windows cover it.
+    /// </summary>
+    public bool PipKeepSourceAwake { get; set; } = true;
+
     /// <summary>How long the mouse may be away from the toolbar/title bar before the toolbar hides.</summary>
     public int ToolbarHideDelayMs { get; set; } = 600;
 

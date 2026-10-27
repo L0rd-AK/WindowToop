@@ -25,6 +25,7 @@ public partial class SettingsWindow : Window
         PipBox.Text = _working.Hotkeys.PictureInPicture;
 
         ToolbarCheck.IsChecked = _working.ToolbarEnabled;
+        PipAwakeCheck.IsChecked = _working.PipKeepSourceAwake;
         StepCombo.SelectedValue = _working.OpacityStep.ToString();
         if (StepCombo.SelectedIndex < 0)
         {
@@ -133,6 +134,7 @@ public partial class SettingsWindow : Window
         }
 
         _working.ToolbarEnabled = ToolbarCheck.IsChecked == true;
+        _working.PipKeepSourceAwake = PipAwakeCheck.IsChecked == true;
         _working.OpacityStep = int.TryParse(StepCombo.SelectedValue as string, out int step) ? step : 10;
 
         bool startup = StartupCheck.IsChecked == true;

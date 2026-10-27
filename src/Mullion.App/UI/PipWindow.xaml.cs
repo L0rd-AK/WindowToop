@@ -42,8 +42,37 @@ public partial class PipWindow : Window
     /// <summary>Where the thumbnail was last placed, in physical client pixels.</summary>
     public PixelRect ThumbnailRect { get; private set; }
 
+    /// <summary>Where the thumbnail currently is on screen, in physical pixels.</summary>
+    public PixelRect ScreenThumbnailRect
+    {
+        get
+        {
+            var origin = new NativeMethods.POINT();
+            if (_hwnd == 0 || !NativeMethods.ClientToScreen(_hwnd, ref origin))
+            {
+                return default;
+            }
+
+            var r = ThumbnailRect;
+            return new PixelRect(origin.X + r.Left, origin.Y + r.Top, origin.X + r.Right, origin.Y + r.Bottom);
+        }
+    }
+
     /// <summary>Raised when the user asks for the original window (click on the thumbnail or the Open button).</summary>
     public event Action<PipWindow>? OpenRequested;
+
+    /// <summary>Puts the frame back at the top of the topmost band (the hidden source is topmost too).</summary>
+    public void BringToTop()
+    {
+        if (_hwnd != 0)
+        {
+            NativeMethods.SetWindowPos(
+                _hwnd,
+                NativeMethods.HWND_TOPMOST,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+        }
+    }
 
     /// <summary>Sizes the frame to a quarter of the work area (keeping the source aspect) and parks it bottom-right.</summary>
     public void PlaceInitial()

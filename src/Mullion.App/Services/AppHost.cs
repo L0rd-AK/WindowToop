@@ -60,12 +60,23 @@ internal sealed class AppHost : IDisposable
             return;
         }
 
-        _pip = new PipManager(Controller, message => Notify("Picture-in-picture", message));
+        if (_options.PipCheck)
+        {
+            _ = PipCheck.RunAsync(this, _options.PipCheckReportPath!, _options.BrowserPath);
+            return;
+        }
+
+        _pip = new PipManager(Controller, Ops, () => Settings.PipKeepSourceAwake, message => Notify("Picture-in-picture", message));
         PipHandler = hwnd => _pip.Toggle(hwnd);
 
         _tray = new TrayService(Controller, () => Settings) { PipAvailable = true };
         _tray.ExitRequested += () => Application.Current.Shutdown();
-        _tray.RestoreAllRequested += () => Controller.RestoreAll();
+        _tray.RestoreAllRequested += () =>
+        {
+            // PiP views hold their sources in a temporary state; close them first so nothing is re-applied afterwards.
+            _pip.CloseAll();
+            Controller.RestoreAll();
+        };
         _tray.SettingsRequested += ShowSettings;
         _tray.DebugConsoleRequested += ShowDebugWindow;
         _tray.ToolbarEnabledChanged += enabled =>

@@ -16,7 +16,7 @@ A mullion is the bar that holds window panes together, which is roughly what thi
 | Global hotkeys | `RegisterHotKey` on a hidden message-only window (`HWND_MESSAGE`); `WM_HOTKEY` is handled in its WndProc. All hotkeys act on the foreground window. |
 | Floating toolbar | A borderless, topmost, `WS_EX_NOACTIVATE \| WS_EX_TOOLWINDOW` WPF window that appears when the mouse rests on the title bar of the foreground window. Windows are tracked with `SetWinEventHook`, the pointer with a `WH_MOUSE_LL` hook. |
 | Tray icon | Lists every modified window with per-window controls, toggles the toolbar, opens settings, Start with Windows (HKCU `Run` key), Exit. |
-| Picture-in-picture | A small topmost frame showing a live DWM thumbnail (`DwmRegisterThumbnail`). Clicking it brings the original window back to the front. |
+| Picture-in-picture | A small topmost frame showing a live DWM thumbnail (`DwmRegisterThumbnail`). Clicking it brings the original window back to the front. While the view is open the original window is hidden (see below) so video keeps playing when you switch to other programs. |
 
 Everything Mullion changes is tracked by window handle together with the original extended style and
 topmost state. All of it is restored on Exit, when a window is destroyed, and from the unhandled-exception
@@ -60,6 +60,30 @@ dotnet publish src\Mullion.App\Mullion.App.csproj -c Release -r win-x64 --self-c
 The executable lands in `src\Mullion.App\bin\Release\net8.0-windows\win-x64\publish\Mullion.exe`.
 Use `-r win-arm64` or `-r win-x86` for other architectures.
 
+## Picture-in-picture and paused video
+
+Chrome, Edge and Firefox stop rendering a window that is completely covered by other windows. A
+picture-in-picture view only mirrors what the source window draws, so without help the view freezes as soon
+as you switch to another program.
+
+While a view is open, Mullion therefore makes the source window always-on-top, click-through and almost
+fully transparent (alpha 1 of 255). Nothing ordinary can cover it, you can't see it or click it, and the
+browser keeps rendering. The mirror is unaffected by that transparency. Focus moves to the window behind,
+and the source is locked against other Mullion changes. Closing the view, Exit, and *Restore all windows*
+put the window back exactly as it was, including an opacity you had set yourself.
+
+Turn this off with *Keep picture-in-picture live* in settings or `"pipKeepSourceAwake": false`.
+
+Limits of the approach:
+
+- Another always-on-top window that fully covers the hidden source can still make the browser pause.
+- The hidden source still appears in Alt-Tab and on the taskbar. Selecting it there focuses a window you
+  can't see; click the view or its *Open* button instead.
+- Windows that draw their own transparency (`UpdateLayeredWindow`), elevated windows, and WPF windows can't
+  be hidden this way. Mullion says so and shows a normal view. WPF apps don't pause when covered anyway.
+- Measured with `--pipcheck` on Edge and Chrome: rendering stopped every time without keep-awake and
+  continued in 6 of 7 runs with it. The one Chrome run that stalled happened while the desktop was in use.
+
 ## Command-line switches
 
 | Switch | Effect |
@@ -68,6 +92,7 @@ Use `-r win-arm64` or `-r win-x86` for other architectures.
 | `--settings <file>` | Use this settings file instead of `%APPDATA%\Mullion\settings.json` (portable use). |
 | `--selftest [report]` | Exercise the real Win32 paths against Mullion's own windows, write a PASS/FAIL report, exit with 0 or 1. |
 | `--smoke [ms]` | Start normally, then shut down cleanly after the delay. Useful for scripted checks. |
+| `--pipcheck [report]` | Open an animated page in a throwaway Edge or Chrome profile, show it in picture-in-picture, cover it with another window, and report whether the page and the view stay live. Add `--browser <exe>` to pick the browser. It opens and focuses windows, so don't use the PC while it runs. |
 
 The debug console is also available from the tray menu.
 
@@ -79,6 +104,7 @@ Stored as JSON in `%APPDATA%\Mullion\settings.json`:
 {
   "toolbarEnabled": true,
   "opacityStep": 10,
+  "pipKeepSourceAwake": true,
   "toolbarHideDelayMs": 600,
   "hotkeys": {
     "toggleTopmost": "Ctrl+Alt+T",
@@ -124,8 +150,9 @@ owning window.
 - **Windows that are already layered.** If an app draws its own layered window (custom splash screens,
   some launchers), Mullion leaves its opacity alone rather than fighting the app's own
   `UpdateLayeredWindow` calls. Click-through still works there.
-- **Picture-in-picture of a minimized window.** DWM stops updating thumbnails of minimized windows, so the
-  view freezes until the window is restored. Mullion does not move or hide the source window.
+- **Picture-in-picture of a minimized window.** DWM stops updating thumbnails of minimized windows. When
+  keep-awake is on, Mullion un-minimizes the source (hidden) while the view is open and minimizes it again
+  afterwards. With keep-awake off, the view freezes until the window is restored.
 - **Click-through and focus.** A click-through window cannot be focused with the mouse, so a hotkey will
   only reach it while it still has keyboard focus. The floating toolbar and the tray menu always work.
 - **Hotkey conflicts.** Combinations already registered by other software cannot be taken over; pick
@@ -137,9 +164,11 @@ owning window.
 
 ## Verification
 
-- `dotnet test` runs 144 unit tests against the core logic (filtering, state tracking, restore ordering,
-  style-rejection rollback, hotkey parsing, settings persistence, hover and thumbnail geometry).
+- `dotnet test` runs 159 unit tests against the core logic (filtering, state tracking, restore ordering,
+  style-rejection rollback, hotkey parsing, settings persistence, hover and thumbnail geometry, picture-in-picture keep-awake style math and window locking).
 - `Mullion.exe --selftest report.txt --settings temp.json` drives the real Win32 paths: a WinForms and a
   WPF target window, raw style probes, the controller, hotkey registration and `WM_HOTKEY` dispatch, tray
-  creation, WinEvent and mouse hooks, toolbar placement and hover logic, DWM thumbnails, settings round
-  trip, and restore-on-exit through the host's teardown.
+  creation, WinEvent and mouse hooks, toolbar placement and hover logic, DWM thumbnails, picture-in-picture
+  keep-awake and its exact restore, settings round trip, and restore-on-exit through the host's teardown.
+- `Mullion.exe --pipcheck report.txt` checks against a real browser that a covered video source keeps
+  rendering and that the view keeps updating.

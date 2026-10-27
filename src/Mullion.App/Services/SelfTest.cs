@@ -255,7 +255,8 @@ internal static class SelfTest
         nint source = form.Handle;
 
         var notes = new List<string>();
-        using var pip = new PipManager(host.Controller, notes.Add);
+        uint sourceOriginal = host.Ops.GetExStyle(source);
+        using var pip = new PipManager(host.Controller, host.Ops, () => true, notes.Add);
 
         bool opened = pip.Toggle(source);
         await Task.Delay(300);
@@ -278,9 +279,34 @@ internal static class SelfTest
             report.Check("pip: frame did not take focus from the source", NativeMethods.GetForegroundWindow() != frame.Handle);
         }
 
+        uint hidden = host.Ops.GetExStyle(source);
+        const uint ghostBits = WindowStyles.WS_EX_LAYERED | WindowStyles.WS_EX_TRANSPARENT | WindowStyles.WS_EX_TOPMOST;
+        report.Check(
+            "pip: source kept awake (topmost, layered, click-through, alpha 1)",
+            pip.IsKeptAwake(source) && (hidden & ghostBits) == ghostBits && Win32WindowOps.TryGetLayeredAlpha(source) == PipKeepAlive.DefaultGhostAlpha,
+            $"exstyle=0x{hidden:X} alpha={Win32WindowOps.TryGetLayeredAlpha(source)}");
+        report.Check("pip: source locked against other operations", host.Controller.ToggleTopmost(source).Status == OpStatus.Skipped && host.Controller.IsSuspended(source));
+
         bool stillOpen = pip.Toggle(source);
         await Task.Delay(150);
         report.Check("pip: toggle again closes the frame", !stillOpen && pip.Count == 0);
+        uint afterClose = host.Ops.GetExStyle(source);
+        report.Check(
+            "pip: closing restores the source exactly and unlocks it",
+            afterClose == sourceOriginal && !host.Controller.IsSuspended(source) && host.Controller.TrackedCount == 0,
+            $"before=0x{sourceOriginal:X} after=0x{afterClose:X}");
+
+        // A source the user had already faded to 60% comes back at 60%, not 100%.
+        host.Controller.SetOpacity(source, 60);
+        pip.Toggle(source);
+        await Task.Delay(150);
+        pip.Toggle(source);
+        await Task.Delay(150);
+        report.Check(
+            "pip: a faded source gets its own opacity back",
+            Win32WindowOps.TryGetLayeredAlpha(source) == OpacityMath.ToAlpha(60) && (host.Ops.GetExStyle(source) & WindowStyles.WS_EX_TRANSPARENT) == 0,
+            $"alpha={Win32WindowOps.TryGetLayeredAlpha(source)} exstyle=0x{host.Ops.GetExStyle(source):X}");
+        host.Controller.RestoreAll();
 
         pip.Toggle(source);
         await Task.Delay(150);

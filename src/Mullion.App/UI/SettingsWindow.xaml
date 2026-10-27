@@ -68,6 +68,10 @@
                 <ComboBoxItem Content="25%" Tag="25" />
             </ComboBox>
         </DockPanel>
+        <CheckBox x:Name="PipAwakeCheck" Margin="0,8,0,0">
+            <TextBlock TextWrapping="Wrap" Width="390"
+                       Text="Keep picture-in-picture live: hide the original window while its view is open, so browsers don't pause video when other windows cover it" />
+        </CheckBox>
         <CheckBox x:Name="StartupCheck" Content="Start Mullion when I sign in to Windows" Margin="0,8,0,0" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">

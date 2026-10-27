@@ -9,6 +9,7 @@ public sealed class WindowController
 {
     private readonly IWindowOps _ops;
     private readonly Dictionary<nint, TrackedWindow> _tracked = new();
+    private readonly HashSet<nint> _suspended = new();
     private readonly object _gate = new();
 
     public WindowController(IWindowOps ops, uint ownProcessId)
@@ -100,6 +101,43 @@ public sealed class WindowController
 
     public int GetOpacity(nint hwnd) => Find(hwnd)?.Opacity ?? OpacityMath.Max;
 
+    /// <summary>
+    /// Locks a root window against changes while something else (a picture-in-picture view) temporarily owns
+    /// its styles. Operations and single-window restores are refused until <see cref="Resume"/>.
+    /// <see cref="RestoreAll"/> still runs, because shutdown must always restore.
+    /// </summary>
+    public void Suspend(nint root)
+    {
+        lock (_gate)
+        {
+            _suspended.Add(root);
+        }
+    }
+
+    public void Resume(nint root)
+    {
+        lock (_gate)
+        {
+            _suspended.Remove(root);
+        }
+    }
+
+    public bool IsSuspended(nint hwnd)
+    {
+        if (hwnd == 0)
+        {
+            return false;
+        }
+
+        lock (_gate)
+        {
+            return _suspended.Contains(hwnd) || _suspended.Contains(_ops.GetRootWindow(hwnd));
+        }
+    }
+
+    private static OpResult SuspendedResult() =>
+        new(OpStatus.Skipped, "This window is shown in picture-in-picture. Close the view first.");
+
     public OpResult ToggleTopmost(nint hwnd) => Apply(hwnd, (tw, snap) => SetTopmostCore(tw, !snap.IsTopmost));
 
     public OpResult SetTopmost(nint hwnd, bool topmost) => Apply(hwnd, (tw, _) => SetTopmostCore(tw, topmost));
@@ -123,6 +161,11 @@ public sealed class WindowController
             if (root == 0)
             {
                 root = hwnd;
+            }
+
+            if (_suspended.Contains(root))
+            {
+                return SuspendedResult();
             }
 
             if (!_tracked.TryGetValue(root, out var tw))
@@ -217,6 +260,11 @@ public sealed class WindowController
             if (probe.Verdict != FilterVerdict.Eligible || probe.Snapshot is null)
             {
                 return OpResult.NotEligible(probe.Verdict);
+            }
+
+            if (_suspended.Contains(probe.Root))
+            {
+                return SuspendedResult();
             }
 
             WindowSnapshot snapshot = probe.Snapshot.Value;

@@ -59,6 +59,21 @@ public class LaunchOptionsTests
     }
 
     [Fact]
+    public void PipCheck_TakesReportAndBrowser()
+    {
+        var options = LaunchOptions.Parse(new[] { "--pipcheck", @"C:\r.txt", "--browser", @"C:\b\chrome.exe" });
+
+        Assert.True(options.PipCheck);
+        Assert.Equal(@"C:\r.txt", options.PipCheckReportPath);
+        Assert.Equal(@"C:\b\chrome.exe", options.BrowserPath);
+        Assert.False(options.SelfTest);
+    }
+
+    [Fact]
+    public void PipCheck_WithoutPath_UsesTempDefault() =>
+        Assert.EndsWith("mullion-pipcheck.txt", LaunchOptions.Parse(new[] { "--pipcheck" }).PipCheckReportPath, StringComparison.Ordinal);
+
+    [Fact]
     public void UnknownArguments_AreIgnored()
     {
         var options = LaunchOptions.Parse(new[] { "--whatever", "value", "--debug" });

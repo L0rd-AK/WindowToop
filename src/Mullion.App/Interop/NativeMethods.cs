@@ -48,6 +48,7 @@ internal static class NativeMethods
     public const int SW_SHOWNOACTIVATE = 4;
     public const int SW_SHOW = 5;
     public const int SW_MINIMIZE = 6;
+    public const int SW_SHOWMINNOACTIVE = 7;
     public const int SW_RESTORE = 9;
 
     // ---------------------------------------------------------------- hotkeys
@@ -294,6 +295,11 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern nint WindowFromPoint(POINT point);
+
+    /// <summary>Converts a client-area point to screen coordinates (physical pixels for a PerMonitorV2 process).</summary>
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ClientToScreen(nint hWnd, ref POINT point);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
